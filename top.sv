@@ -1,6 +1,6 @@
 `include "Sysbus.defs"
-
 module top
+
 #(
   ID_WIDTH = 13,
   ADDR_WIDTH = 64,
@@ -12,12 +12,10 @@ module top
          reset,
          hz32768timer,
 
-  // 64-bit addresses of the program entry point and initial stack pointer
   input  [63:0] entry,
   input  [63:0] stackptr,
   input  [63:0] satp,
 
-  // interface to connect to the bus
   output  wire [ID_WIDTH-1:0]    m_axi_awid,
   output  wire [ADDR_WIDTH-1:0]  m_axi_awaddr,
   output  wire [7:0]             m_axi_awlen,
@@ -63,10 +61,11 @@ module top
   // BEGIN INSTRUCTION FETCH STAGE
 
   // State definition
-  typedef enum logic [1:0] {
+  typedef enum logic [2:0] {
     IDLE,
     FETCH,
     WAIT,
+    DECODE,
     DONE
   } IF_state_t;
 
@@ -74,6 +73,11 @@ module top
 
   logic [63:0] pc, pc_next;       // Program Counter 
   logic [31:0] curr_instruction;  // Fetched Instruction (internal)
+  logic [4:0] rd, rs1, rs2;       // Destination and source registers
+  logic [31:0] imm;               // Immediate value
+  logic [6:0] opcode;             // Opcode
+  logic [2:0] funct3;             // Funct3
+  logic [6:0] funct7;             // Funct7
   logic        fetch_done;        // Internal signal to indicate fetch completion
 
   // State transition and sequential logic
@@ -89,23 +93,22 @@ module top
   end
 
   // Instruction fetch FSM state logic 
-  // TODO - things break when I change below assignments from blocking to non-blocking. But always_ff assignments need to be non-blocking?
-  always_ff @(posedge clk) begin
+  always_comb begin
     // Default outputs
     next_state = current_state;
-    m_axi_arvalid = 0;
-    m_axi_rready = 0;
-    fetch_done = 0;
+    m_axi_arvalid = 1'b0;
+    m_axi_rready = 1'b0;
+    fetch_done = 1'b0;
+    pc_next = pc; // Default to hold current PC value
 
     case (current_state)
       IDLE: begin
         // Start fetching immediately after reset
         next_state = FETCH;
-        // $display("IDLE!");
       end
 
       FETCH: begin
-        m_axi_arvalid = 1;
+        m_axi_arvalid = 1'b1;
         m_axi_araddr = pc;
         m_axi_arsize = 3'b010;      // 32-bit transfer
         m_axi_arlen  = 8'd7;        // 8-beat transfer
@@ -115,28 +118,68 @@ module top
         if (m_axi_arready && m_axi_arvalid) begin
             // Only move to WAIT if the request has been accepted
             next_state = WAIT;
-            // $display("Moving to WAIT state");
         end else begin
             // Stay in FETCH until the request is accepted
-            // $display("Stay in WAIT state");
             next_state = FETCH;
         end
       end
 
       WAIT: begin
-        m_axi_rready = 1;
-        // $display("WAIT!");
+        m_axi_rready = 1'b1;
 
         if (m_axi_rvalid && m_axi_rlast) begin
-            fetch_done = 1;             // Signal that fetch is done
-            next_state = DONE;
-            //$display("Going to DONE!");
+            fetch_done = 1'b1;             // Signal that fetch is done
+            next_state = DECODE; // Move to DECODE state
         end else begin
             next_state = WAIT; // Remain in WAIT until the transaction is complete
-            //$display("REMAIN WAIT!");
         end
       end
 
+      DECODE: begin
+        // Decode the instruction based on RISC-V format
+        opcode = curr_instruction[6:0];
+        rd     = curr_instruction[11:7];
+        funct3 = curr_instruction[14:12];
+        rs1    = curr_instruction[19:15];
+        rs2    = curr_instruction[24:20];
+        funct7 = curr_instruction[31:25];
+
+        case (opcode)
+          7'b0110011: begin // R-type
+            $display("R-type Instruction: rd=%0d, rs1=%0d, rs2=%0d, funct3=%0b, funct7=%0b", rd, rs1, rs2, funct3, funct7);
+          end
+          7'b0010011: begin // I-type
+            imm = curr_instruction[31:20];
+            $display("I-type Instruction: rd=%0d, rs1=%0d, imm=%0d, funct3=%0b", rd, rs1, imm, funct3);
+          end
+          7'b0000011: begin // Load (I-type)
+            imm = curr_instruction[31:20];
+            $display("Load Instruction: rd=%0d, rs1=%0d, imm=%0d, funct3=%0b", rd, rs1, imm, funct3);
+          end
+          7'b1100111: begin // JALR (I-type)
+            imm = curr_instruction[31:20];
+            $display("JALR Instruction: rd=%0d, rs1=%0d, imm=%0d", rd, rs1, imm);
+          end
+          7'b0100011: begin // S-type (Store)
+            imm = {curr_instruction[31:25], curr_instruction[11:7]};
+            $display("S-type (Store) Instruction: rs1=%0d, rs2=%0d, imm=%0d, funct3=%0b", rs1, rs2, imm, funct3);
+          end
+          7'b1100011: begin // B-type (Branch)
+            imm = {curr_instruction[31], curr_instruction[7], curr_instruction[30:25], curr_instruction[11:8]};
+            $display("B-type (Branch) Instruction: rs1=%0d, rs2=%0d, imm=%0d, funct3=%0b", rs1, rs2, imm, funct3);
+          end
+          7'b1101111: begin // J-type (JAL)
+            imm = {curr_instruction[31], curr_instruction[19:12], curr_instruction[20], curr_instruction[30:21]};
+            $display("J-type (JAL) Instruction: rd=%0d, imm=%0d", rd, imm);
+          end
+          default: begin
+            $display("Unknown Instruction: 0x%x", curr_instruction);
+          end
+        endcase
+
+        // Move to the DONE state after decoding
+        next_state = DONE;
+      end
 
       DONE: begin
         // "terminate the simulation when an all-zero (64'b0) response is received from memory"
@@ -145,11 +188,9 @@ module top
 
         // Instruction fetched, go to IDLE or FETCH based on system design
         pc_next = pc + 4;  // Move to the next instruction
-        next_state = IDLE;
+        next_state = FETCH;
         curr_instruction = m_axi_rdata;
-        //$display("DONE!");
         $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4, curr_instruction, pc);
-
       end
 
       default: 
@@ -159,10 +200,10 @@ module top
 
   // END INSTRUCTION FETCH STAGE
 
-  // BEGIN INSTRUCTION DECODE STAGE
   // END INSTRUCTION DECODE STAGE
 
   initial begin
     $display("Initializing top, entry point = 0x%x", entry);
   end
+
 endmodule
