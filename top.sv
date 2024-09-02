@@ -146,31 +146,63 @@ module top
 
         case (opcode)
           7'b0110011: begin // R-type
-            $display("R-type Instruction: rd=%0d, rs1=%0d, rs2=%0d, funct3=%0b, funct7=%0b", rd, rs1, rs2, funct3, funct7);
+            case (funct3)
+              3'b000: $display("ADD %0d", rd);
+              3'b111: $display("AND %0d", rd);
+              3'b110: $display("OR %0d", rd);
+              // Add other R-type instructions as needed
+              default: $display("Unknown R-type Instruction");
+            endcase
           end
           7'b0010011: begin // I-type
             imm = curr_instruction[31:20];
-            $display("I-type Instruction: rd=%0d, rs1=%0d, imm=%0d, funct3=%0b", rd, rs1, imm, funct3);
+            case (funct3)
+              3'b000: $display("ADDI %0d", rd);
+              3'b111: $display("ANDI %0d", rd);
+              3'b110: $display("ORI %0d", rd);
+              // Add other I-type instructions as needed
+              default: $display("Unknown I-type Instruction");
+            endcase
           end
           7'b0000011: begin // Load (I-type)
             imm = curr_instruction[31:20];
-            $display("Load Instruction: rd=%0d, rs1=%0d, imm=%0d, funct3=%0b", rd, rs1, imm, funct3);
+            case (funct3)
+              3'b010: $display("LW %0d", rd);
+              3'b000: $display("LB %0d", rd);
+              3'b001: $display("LH %0d", rd);
+              // Add other load instructions as needed
+              default: $display("Unknown Load Instruction");
+            endcase
           end
           7'b1100111: begin // JALR (I-type)
             imm = curr_instruction[31:20];
-            $display("JALR Instruction: rd=%0d, rs1=%0d, imm=%0d", rd, rs1, imm);
+            imm = curr_instruction[31:20];
+            // Example: JALR rd, imm(rs1)
+            $display("JALR %0d", rd);
           end
           7'b0100011: begin // S-type (Store)
             imm = {curr_instruction[31:25], curr_instruction[11:7]};
-            $display("S-type (Store) Instruction: rs1=%0d, rs2=%0d, imm=%0d, funct3=%0b", rs1, rs2, imm, funct3);
+            case (funct3)
+              3'b010: $display("SW (no rd)");
+              3'b000: $display("SB (no rd)");
+              3'b001: $display("SH (no rd)");
+              // Add other store instructions as needed
+              default: $display("Unknown Store Instruction");
+            endcase
           end
           7'b1100011: begin // B-type (Branch)
             imm = {curr_instruction[31], curr_instruction[7], curr_instruction[30:25], curr_instruction[11:8]};
-            $display("B-type (Branch) Instruction: rs1=%0d, rs2=%0d, imm=%0d, funct3=%0b", rs1, rs2, imm, funct3);
+            case (funct3)
+              3'b000: $display("BEQ (no rd)");
+              3'b001: $display("BNE (no rd)");
+              3'b100: $display("BLT (no rd)");
+              3'b101: $display("BGE (no rd)");
+              default: $display("Unknown Store Instruction");
+            endcase
           end
           7'b1101111: begin // J-type (JAL)
             imm = {curr_instruction[31], curr_instruction[19:12], curr_instruction[20], curr_instruction[30:21]};
-            $display("J-type (JAL) Instruction: rd=%0d, imm=%0d", rd, imm);
+            $display("JAL %0d", rd);
           end
           default: begin
             $display("Unknown Instruction: 0x%x", curr_instruction);
