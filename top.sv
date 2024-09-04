@@ -1,6 +1,6 @@
 `include "Sysbus.defs"
-module top
 
+module top
 #(
   ID_WIDTH = 13,
   ADDR_WIDTH = 64,
@@ -12,10 +12,12 @@ module top
          reset,
          hz32768timer,
 
+  // 64-bit addresses of the program entry point and initial stack pointer
   input  [63:0] entry,
   input  [63:0] stackptr,
   input  [63:0] satp,
-
+ 
+  // interface to connect to the bus
   output  wire [ID_WIDTH-1:0]    m_axi_awid,
   output  wire [ADDR_WIDTH-1:0]  m_axi_awaddr,
   output  wire [7:0]             m_axi_awlen,
@@ -72,7 +74,7 @@ module top
   IF_state_t current_state, next_state;
 
   logic [63:0] pc, pc_next;       // Program Counter 
-  logic [31:0] curr_instruction;  // Fetched Instruction (internal)
+  logic [31:0] curr_instruction, next_instruction;  // Fetched Instruction (internal)
   logic [4:0] rd, rs1, rs2;       // Destination and source registers
   logic [31:0] imm;               // Immediate value
   logic [6:0] opcode;             // Opcode
@@ -89,6 +91,10 @@ module top
     end else begin
       pc <= pc_next;
       current_state <= next_state;  // Update state
+      if (fetch_done) begin
+        next_instruction <= curr_instruction;
+        $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4, next_instruction, pc);
+      end
     end
   end
 
@@ -113,7 +119,7 @@ module top
         m_axi_arsize = 3'b010;      // 32-bit transfer
         m_axi_arlen  = 8'd7;        // 8-beat transfer
         m_axi_arburst = 2'b10;      // Wrap burst
-        $display("FETCH!");
+        //$display("FETCH!");
 
         if (m_axi_arready && m_axi_arvalid) begin
             // Only move to WAIT if the request has been accepted
@@ -222,7 +228,7 @@ module top
         pc_next = pc + 4;  // Move to the next instruction
         next_state = FETCH;
         curr_instruction = m_axi_rdata;
-        $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4, curr_instruction, pc);
+        
       end
 
       default: 
