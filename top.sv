@@ -75,13 +75,14 @@ module top
 
   logic [63:0] pc, pc_next;       // Program Counter 
   logic [31:0] curr_instruction, next_instruction;  // Fetched Instruction (internal)
+  string out,out_next;
   logic [4:0] rd, rs1, rs2;       // Destination and source registers
   logic [31:0] imm;               // Immediate value
   logic [6:0] opcode;             // Opcode
   logic [2:0] funct3;             // Funct3
   logic [6:0] funct7;             // Funct7
-  logic        fetch_done;        // Internal signal to indicate fetch completion
-
+  logic fetch_done;        // Internal signal to indicate fetch completion
+  logic decode_done;
   // State transition and sequential logic
   always_ff @(posedge clk) begin
     if (reset) begin
@@ -91,9 +92,16 @@ module top
     end else begin
       pc <= pc_next;
       current_state <= next_state;  // Update state
+      // out_next <= out;
       if (fetch_done) begin
         next_instruction <= curr_instruction;
         $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4, next_instruction, pc);
+         
+      end
+      if (decode_done) begin
+        out_next <= out;
+        $display("%s\n", out_next); 
+        
       end
     end
   end
@@ -102,9 +110,11 @@ module top
   always_comb begin
     // Default outputs
     next_state = current_state;
+    out = "";
     m_axi_arvalid = 1'b0;
     m_axi_rready = 1'b0;
     fetch_done = 1'b0;
+    decode_done = 1'b0;
     pc_next = pc; // Default to hold current PC value
 
     case (current_state)
@@ -135,7 +145,7 @@ module top
 
         if (m_axi_rvalid && m_axi_rlast) begin
             fetch_done = 1'b1;             // Signal that fetch is done
-            next_state = DECODE; // Move to DECODE state
+            next_state = DONE; // Move to DECODE state
         end else begin
             next_state = WAIT; // Remain in WAIT until the transaction is complete
         end
@@ -149,74 +159,77 @@ module top
         rs1    = curr_instruction[19:15];
         rs2    = curr_instruction[24:20];
         funct7 = curr_instruction[31:25];
-
+        decode_done = 1'b1;
         case (opcode)
           7'b0110011: begin // R-type
             case (funct3)
-              3'b000: $display("ADD %0d", rd);
-              3'b111: $display("AND %0d", rd);
-              3'b110: $display("OR %0d", rd);
+              3'b000: out = $sformatf("ADD %0d", rd);
+              3'b111: out = $sformatf("AND %0d", rd);
+              3'b110: out = $sformatf("OR %0d", rd);
               // Add other R-type instructions as needed
-              default: $display("Unknown R-type Instruction");
+              
+              default: out = $sformatf("Unknown R-type Instruction");
             endcase
           end
           7'b0010011: begin // I-type
             imm = curr_instruction[31:20];
             case (funct3)
-              3'b000: $display("ADDI %0d", rd);
-              3'b111: $display("ANDI %0d", rd);
-              3'b110: $display("ORI %0d", rd);
+              3'b000: out = $sformatf("ADDI %0d", rd);
+              3'b111: out = $sformatf("ANDI %0d", rd);
+              3'b110: out = $sformatf("ORI %0d", rd);
               // Add other I-type instructions as needed
-              default: $display("Unknown I-type Instruction");
+              default: out = $sformatf("Unknown I-type Instruction");
             endcase
           end
           7'b0000011: begin // Load (I-type)
             imm = curr_instruction[31:20];
             case (funct3)
-              3'b010: $display("LW %0d", rd);
-              3'b000: $display("LB %0d", rd);
-              3'b001: $display("LH %0d", rd);
+              3'b010: out = $sformatf("LW %0d", rd);
+              3'b000: out = $sformatf("LB %0d", rd);
+              3'b001: out = $sformatf("LH %0d", rd);
               // Add other load instructions as needed
-              default: $display("Unknown Load Instruction");
+              default: out = $sformatf("Unknown Load Instruction");
             endcase
           end
           7'b1100111: begin // JALR (I-type)
             imm = curr_instruction[31:20];
             imm = curr_instruction[31:20];
             // Example: JALR rd, imm(rs1)
-            $display("JALR %0d", rd);
+            out = $sformatf("JALR %0d", rd);
           end
           7'b0100011: begin // S-type (Store)
             imm = {curr_instruction[31:25], curr_instruction[11:7]};
             case (funct3)
-              3'b010: $display("SW (no rd)");
-              3'b000: $display("SB (no rd)");
-              3'b001: $display("SH (no rd)");
+              3'b010: out = $sformatf("SW (no rd)");
+              3'b000: out = $sformatf("SB (no rd)");
+              3'b001: out = $sformatf("SH (no rd)");
               // Add other store instructions as needed
-              default: $display("Unknown Store Instruction");
+              default: out = $sformatf("Unknown Store Instruction");
             endcase
           end
           7'b1100011: begin // B-type (Branch)
             imm = {curr_instruction[31], curr_instruction[7], curr_instruction[30:25], curr_instruction[11:8]};
             case (funct3)
-              3'b000: $display("BEQ (no rd)");
-              3'b001: $display("BNE (no rd)");
-              3'b100: $display("BLT (no rd)");
-              3'b101: $display("BGE (no rd)");
-              default: $display("Unknown Store Instruction");
+              3'b000: out = $sformatf("BEQ (no rd)");
+              3'b001: out = $sformatf("BNE (no rd)");
+              3'b100: out = $sformatf("BLT (no rd)");
+              3'b101: out = $sformatf("BGE (no rd)");
+              default: out = $sformatf("Unknown Store Instruction");
             endcase
           end
           7'b1101111: begin // J-type (JAL)
             imm = {curr_instruction[31], curr_instruction[19:12], curr_instruction[20], curr_instruction[30:21]};
-            $display("JAL %0d", rd);
+            out = $sformatf("JAL %0d", rd);
           end
           default: begin
-            $display("Unknown Instruction: 0x%x", curr_instruction);
+            out = $sformatf("Unknown Instruction: 0x%x", curr_instruction);
+            decode_done = 1'b0;
           end
+          
         endcase
 
         // Move to the DONE state after decoding
-        next_state = DONE;
+        next_state = FETCH;
       end
 
       DONE: begin
@@ -226,7 +239,7 @@ module top
 
         // Instruction fetched, go to IDLE or FETCH based on system design
         pc_next = pc + 4;  // Move to the next instruction
-        next_state = FETCH;
+        next_state = DECODE;
         curr_instruction = m_axi_rdata;
         
       end
