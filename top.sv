@@ -74,7 +74,7 @@ module top
   IF_state_t current_state, next_state;
 
   logic [63:0] pc, pc_next;       // Program Counter 
-  logic [31:0] curr_instruction, next_instruction;  // Fetched Instruction (internal)
+  logic [31:0] curr_instruction, curr_instruction_1;  // Fetched Instruction (internal)
   string out,out_next;
   logic [4:0] rd, rs1, rs2;       // Destination and source registers
   logic [31:0] imm;               // Immediate value
@@ -92,11 +92,14 @@ module top
     end else begin
       pc <= pc_next;
       current_state <= next_state;  // Update state
-      // out_next <= out;
       if (fetch_done) begin
-        next_instruction <= curr_instruction;
-        $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4, next_instruction, pc);
-         
+        // "terminate the simulation when an all-zero (64'b0) response is received from memory"
+        if (curr_instruction == 64'b0 || curr_instruction_1 == 64'b0) begin
+          $finish;
+        end else begin
+          $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4 + 1, curr_instruction, pc);
+          $display("Fetched Instruction %3d 0x%x PC: 0x%x ", pc/4 + 2, curr_instruction_1, pc+4);
+        end
       end
       if (decode_done) begin
         out_next <= out;
@@ -126,7 +129,7 @@ module top
       FETCH: begin
         m_axi_arvalid = 1'b1;
         m_axi_araddr = pc;
-        m_axi_arsize = 3'b010;      // 32-bit transfer
+        m_axi_arsize = 3'b011;      // 64-bit transfer
         m_axi_arlen  = 8'd7;        // 8-beat transfer
         m_axi_arburst = 2'b10;      // Wrap burst
         //$display("FETCH!");
@@ -144,7 +147,6 @@ module top
         m_axi_rready = 1'b1;
 
         if (m_axi_rvalid && m_axi_rlast) begin
-            fetch_done = 1'b1;             // Signal that fetch is done
             next_state = DONE; // Move to DECODE state
         end else begin
             next_state = WAIT; // Remain in WAIT until the transaction is complete
@@ -233,14 +235,14 @@ module top
       end
 
       DONE: begin
-        // "terminate the simulation when an all-zero (64'b0) response is received from memory"
-        if (m_axi_rdata == 64'b0)
-          $finish;
 
+        fetch_done = 1'b1;             // Signal that fetch is done
         // Instruction fetched, go to IDLE or FETCH based on system design
-        pc_next = pc + 4;  // Move to the next instruction
         next_state = DECODE;
-        curr_instruction = m_axi_rdata;
+        pc_next = pc + 8;  // Move to the next instruction
+        next_state = DECODE;
+        curr_instruction = m_axi_rdata[31:0];
+        curr_instruction_1 = m_axi_rdata[63:32];
         
       end
 
