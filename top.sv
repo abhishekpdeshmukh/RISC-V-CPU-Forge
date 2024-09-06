@@ -65,7 +65,7 @@ module top
     FETCH       = 3'b001,
     WAIT        = 3'b010,
     DECODE      = 3'b011,
-    FINISH      = 3'b100
+    DONE        = 3'b100
   } state_t;
 
   state_t current_state, next_state;
@@ -140,22 +140,23 @@ module top
           cir_2 = m_axi_rdata[63:32];  // Extract upper 32 bits
 
           // Terminate the simulation when an all-zero (64'b0) response is received from memory
-          if (m_axi_rdata == 64'b0)
-            next_state = FINISH;
+          if (m_axi_rdata == 64'b0) begin
+            $finish;
+          end
           
           // Increment PC by 8 for the 2 instructions read
           pc_next = pc + 8;
 
           // If the last beat of the burst has been received
           if (m_axi_rlast) begin
-            next_state = IDLE;
+            next_state = DONE;
           end
         end
       end
       
-      FINISH: begin
+      DONE: begin
         // End of simulation
-        $finish;
+        next_state = IDLE;
       end
 
       default: begin
