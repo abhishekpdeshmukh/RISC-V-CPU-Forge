@@ -59,29 +59,24 @@ module top
   input   wire [3:0]             m_axi_acsnoop
 );
 
+  // INSTRUCTION FETCH START 
+
   // Define the states of the FSM
   typedef enum logic [2:0] {
     IDLE        = 3'b000,
     FETCH       = 3'b001,
     WAIT        = 3'b010,
-    DECODE      = 3'b011,
+    DECODE      = 3'b011,   //TODO: remove this state we if we are moving decode to new FSM
     DONE        = 3'b100
-  } state_t;
+  } IF_state_t;
 
-  state_t current_state, next_state;
+  IF_state_t current_state, next_state;
 
   // Define a register for the program counter
   logic [63:0] pc, pc_next;
-  logic [4:0]  rd, rs1, rs2;       // Destination and source registers
-  logic [31:0] imm;                // Immediate value
-  logic [6:0]  opcode;             // Opcode
-  logic [2:0]  funct3;             // Funct3
-  logic [6:0]  funct7;             // Funct7
 
   // Each beat of data contains two 32-bit instructions
-  logic [31:0] cir_1, cir_2, num_inst;
-
-  string out;
+  logic [31:0] cir_1, cir_2;
 
   // FSM State Transition Logic (sequential, update pc here)
   always_ff @(posedge clk) begin
@@ -135,6 +130,7 @@ module top
         m_axi_rready = 1'b1;
         
         if (m_axi_rvalid) begin
+
           // Each beat of data contains 64 bits (8 bytes)
           cir_1 = m_axi_rdata[31:0];   // Extract lower 32 bits
           cir_2 = m_axi_rdata[63:32];  // Extract upper 32 bits
@@ -143,8 +139,10 @@ module top
           if (m_axi_rdata == 64'b0) begin
             $finish;
           end
-          
-          // Increment PC by 8 for the 2 instructions read
+
+          // Increment PC by 8 for the 2 instructions read. 
+          // However it's only used to initiate a new read request 
+          // after m_axi_rlast=1 (for next 64 bytes)
           pc_next = pc + 8;
 
           // If the last beat of the burst has been received
@@ -155,7 +153,7 @@ module top
       end
       
       DONE: begin
-        // End of simulation
+        // Initiate new 64-byte read request
         next_state = IDLE;
       end
 
@@ -164,6 +162,20 @@ module top
       end
     endcase
   end
+
+  // INSTRUCTION FETCH END 
+
+  // INSTRUCTION DECODE BEGIN
+
+  logic [4:0]  rd, rs1, rs2;       // Destination and source registers
+  logic [31:0] imm;                // Immediate value
+  logic [6:0]  opcode;             // Opcode
+  logic [2:0]  funct3;             // Funct3
+  logic [6:0]  funct7;             // Funct7
+
+  string out;
+  
+  // INSTRUCTION DECODE END  
 
   initial begin
     $display("Initializing top, entry point = 0x%x", entry);
