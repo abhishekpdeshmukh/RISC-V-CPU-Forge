@@ -154,6 +154,7 @@ module top
       
       DONE: begin
         // Initiate new 64-byte read request
+        m_axi_rready = 1'b0;
         next_state = IDLE;
       end
 
