@@ -98,10 +98,6 @@ module top
 
   // FSM Next State and Output Logic
   always_comb begin
-    // Default outputs
-    next_state = current_state;
-    m_axi_arvalid = 1'b0;
-    m_axi_rready = 1'b0;
 
     case (current_state)
       IDLE: begin
@@ -122,12 +118,14 @@ module top
 
         if (m_axi_arready) begin
           next_state = WAIT;
+          
         end
       end
       
       WAIT: begin
-        // Ready to accept data
-        m_axi_rready = 1'b1;
+
+        m_axi_arvalid = 1'b0; // Deassert arvalid after handshake
+        m_axi_rready = 1'b1;  // Ready to accept data
         
         if (m_axi_rvalid) begin
 
@@ -153,7 +151,7 @@ module top
       end
       
       DONE: begin
-        // Initiate new 64-byte read request
+        // De-assert m_axi_rready until next 64-byte read request
         m_axi_rready = 1'b0;
         next_state = IDLE;
       end
