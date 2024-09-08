@@ -202,11 +202,11 @@ function void decode_and_print(logic [63:0] addr, logic [31:0] instr);
       7'b1100111: begin // JALR
         mnemonic = $sformatf("jalr    %s", get_reg_name(rd));
       end
-      7'b1100011: begin // Branch instructions
+      7'b1100011: begin // Branch instructions (e.g., BEQ, BNE, BLT)
         logic signed [12:0] b_imm = {{7{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
         case (funct3)
-          3'b000: mnemonic = $sformatf("beqz    %s,0x%x", get_reg_name(rs1), addr + b_imm);
-          3'b001: mnemonic = $sformatf("bnez    %s,0x%x", get_reg_name(rs1), addr + b_imm);
+          3'b000: mnemonic = $sformatf("beq     %s,%s,0x%x", get_reg_name(rs1), get_reg_name(rs2), addr + b_imm);
+          3'b001: mnemonic = $sformatf("bne     %s,%s,0x%x", get_reg_name(rs1), get_reg_name(rs2), addr + b_imm);
           3'b100: mnemonic = $sformatf("blt     %s,%s,0x%x", get_reg_name(rs1), get_reg_name(rs2), addr + b_imm);
           3'b101: mnemonic = $sformatf("bge     %s,%s,0x%x", get_reg_name(rs1), get_reg_name(rs2), addr + b_imm);
           3'b110: mnemonic = $sformatf("bltu    %s,%s,0x%x", get_reg_name(rs1), get_reg_name(rs2), addr + b_imm);
@@ -275,15 +275,20 @@ function void decode_and_print(logic [63:0] addr, logic [31:0] instr);
         endcase
       end
       7'b0111011: begin // RISC-V 64-bit specific register-register instructions
-        case (funct3)
-          3'b000: mnemonic = funct7[5] ? $sformatf("subw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
-                                         $sformatf("addw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
-          3'b001: mnemonic = $sformatf("sllw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
-          3'b101: mnemonic = funct7[5] ? $sformatf("sraw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
-                                         $sformatf("srlw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
-          default: mnemonic = "unknown";
-        endcase
-      end
+      case (funct3)
+        3'b000: mnemonic = funct7[5] ? $sformatf("subw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
+                                      $sformatf("addw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
+        3'b001: mnemonic = $sformatf("sllw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
+        3'b100: mnemonic = funct7[5] ? $sformatf("divw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
+                                      $sformatf("divuw   %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
+        3'b110: mnemonic = funct7[5] ? $sformatf("remw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
+                                      $sformatf("remuw   %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
+        3'b101: mnemonic = funct7[5] ? $sformatf("sraw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2)) :
+                                      $sformatf("srlw    %s,%s,%s", get_reg_name(rd), get_reg_name(rs1), get_reg_name(rs2));
+        default: mnemonic = "unknown";
+      endcase
+    end
+
       default: mnemonic = "unknown";
     endcase
 
