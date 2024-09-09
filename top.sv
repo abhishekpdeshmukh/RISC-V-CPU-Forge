@@ -62,11 +62,11 @@ module top
   // INSTRUCTION FETCH START 
 
   // Define the states of the FSM
-  typedef enum logic [2:0] {
-    IDLE        = 3'b000,
-    FETCH       = 3'b001,
-    WAIT        = 3'b010,
-    DONE        = 3'b100
+  typedef enum logic [1:0] {
+    IDLE        = 2'b00,
+    FETCH       = 2'b01,
+    DECODE      = 2'b10,
+    DONE        = 2'b11
   } IF_state_t;
 
   IF_state_t current_state, next_state;
@@ -85,7 +85,7 @@ module top
     end else begin
       current_state <= next_state;
       pc <= pc_next;
-      if (current_state == WAIT && m_axi_rvalid) begin
+      if (current_state == DECODE && m_axi_rvalid) begin
         if (cir_1)
           $display("   %h:\t   %h\t%s", pc, cir_1, decoded_instr_1);
         if (cir_2)
@@ -119,11 +119,11 @@ module top
         m_axi_arvalid = 1'b1;             // Ready to initiate read
 
         if (m_axi_arready) begin
-          next_state = WAIT;
+          next_state = DECODE;
         end
       end
       
-      WAIT: begin
+      DECODE: begin
 
         m_axi_arvalid = 1'b0; // Deassert arvalid after handshake
         m_axi_rready = 1'b1;  // Ready to accept data
@@ -133,6 +133,11 @@ module top
           // Each beat of data contains 64 bits (8 bytes)
           cir_1 = m_axi_rdata[31:0];   // Extract lower 32 bits
           cir_2 = m_axi_rdata[63:32];  // Extract upper 32 bits
+
+          if (m_axi_rvalid) begin
+            decode_and_print(pc, cir_1, 0);
+            decode_and_print(pc + 4, cir_2, 1);
+          end
 
           // Terminate the simulation when an all-zero (64'b0) response is received from memory
           if (m_axi_rdata == 64'b0) begin
@@ -144,6 +149,7 @@ module top
 
           // If the last beat of the burst has been received
           if (m_axi_rlast) begin
+
             next_state = DONE;
           end
         end
@@ -173,14 +179,6 @@ module top
 
 
   string decoded_instr_1, decoded_instr_2;
-
-  // Combinational Block for Decoder
-  always_comb begin
-    if (m_axi_rvalid) begin
-      decode_and_print(pc, cir_1, 0);
-      decode_and_print(pc + 4, cir_2, 1);
-    end
-  end
 
   function void decode_and_print(logic [63:0] addr, logic [31:0] instr, logic flag);
       // Extract instruction fields
