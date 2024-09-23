@@ -62,11 +62,12 @@ module top
   // INSTRUCTION FETCH START 
 
   // Define the states of the FSM
-  typedef enum logic [1:0] {
-    IDLE        = 2'b00,
-    FETCH       = 2'b01,
-    DECODE      = 2'b10,
-    DONE        = 2'b11
+  typedef enum logic [2:0] {
+    IDLE        = 3'b000,
+    FETCH       = 3'b001,
+    DECODE      = 3'b010,
+    DONE        = 3'b011,
+    EXECUTE     = 3'b100
   } IF_state_t;
 
   IF_state_t current_state, next_state;
@@ -152,9 +153,17 @@ module top
 
             next_state = DONE;
           end
+          else begin
+            m_axi_rready = 1'b0;
+            next_state = EXECUTE;
+          end
         end
       end
-      
+      EXECUTE: begin
+         $display(" Inside Execute");
+         m_axi_rready = 1'b1;
+         next_state = DECODE;
+      end
       DONE: begin
         // Initiate new 64-byte read request
         m_axi_rready = 1'b0;
