@@ -81,35 +81,6 @@ module top
   // FSM State Transition Logic (sequential, update pc here)
   string decoded_instr;
 
-    // Registers and intermediate logic
-  logic [4:0]  rd, rs1, rs2;       // Destination and source registers
-  logic [31:0] imm;                // Immediate value
-  logic [6:0]  opcode;             // Opcode
-  logic [2:0]  funct3;             // Funct3
-  logic [6:0]  funct7;             // Funct7
-
-
-
-
-Decode u_decode (
-    .addr(pc),
-    .instr(cir),                // Choose instruction to decode
-    .decoded_instr(decoded_instr),  // Decoded instruction string
-    .rd(rd),                    // Output destination register
-    .rs1(rs1),                  // Output source register 1
-    .rs2(rs2),                  // Output source register 2
-    .imm(imm),                  // Output immediate value
-    .opcode(opcode),            // Output opcode
-    .funct3(funct3),            // Output funct3
-    .funct7(funct7)             // Output funct7
-  );
-
-
-
-
-
-
-
 
   always_ff @(posedge clk) begin
     if (reset) begin
@@ -119,11 +90,10 @@ Decode u_decode (
     end else begin
       current_state <= next_state;
       pc <= pc_next;
-      flag <= ~flag;
-    
+      
       if (current_state == DECODE && m_axi_rvalid) begin
-
           $display("   %h:\t   %h\t%s", pc, cir, decoded_instr); 
+          flag <= ~flag;
       end
     end
   end
@@ -163,42 +133,43 @@ Decode u_decode (
       DECODE: begin
 
         m_axi_arvalid = 1'b0; // Deassert arvalid after handshake
-        m_axi_rready = 1'b1;  // Ready to accept data
-        
-
+          
         if (m_axi_rvalid) begin
 
           if(!flag) begin
-            
+            //$display("aka 1");
             cir = m_axi_rdata[31:0];
-            pc_next = pc + 4;
+            m_axi_rready = 1'b0;
           end
           else begin
+            //$display("aka 2");
             cir = m_axi_rdata[63:32]; 
-            pc_next = pc + 4;
+            m_axi_rready = 1'b1; // Ready to accept data
+            
           end
-     
+          pc_next = pc + 4;
 
           // Terminate the simulation when an all-zero (64'b0) response is received from memory
           if (m_axi_rdata == 64'b0) begin
             $finish;
           end
 
-          if (m_axi_rlast) begin
-            $display(" I am done");
-            next_state = DONE;
-          end
-          else begin
-            m_axi_rready = 1'b0;
-            next_state = EXECUTE;
-          end
+          m_axi_rready = 1'b0;
+          next_state = EXECUTE;
         end
       end
+
       EXECUTE: begin
-         $display(" Inside Execute");
-         m_axi_rready = 1'b1;
-         next_state = DECODE;
-  
+
+        if(!flag) begin
+          m_axi_rready = 1'b1;
+        end 
+        if (m_axi_rlast && !flag) begin
+          next_state = DONE;
+        end
+        else begin
+          next_state = DECODE;
+        end
       end
       DONE: begin
         // Initiate new 64-byte read request
@@ -212,6 +183,27 @@ Decode u_decode (
     endcase
   end
 
+    // Registers and intermediate logic
+  logic [4:0]  rd, rs1, rs2;       // Destination and source registers
+  logic [31:0] imm;                // Immediate value
+  logic [6:0]  opcode;             // Opcode
+  logic [2:0]  funct3;             // Funct3
+  logic [6:0]  funct7;             // Funct7
 
+
+
+
+Decode u_decode (
+    .addr(pc),
+    .instr(cir),                // Choose instruction to decode
+    .decoded_instr(decoded_instr),  // Decoded instruction string
+    .rd(rd),                    // Output destination register
+    .rs1(rs1),                  // Output source register 1
+    .rs2(rs2),                  // Output source register 2
+    .imm(imm),                  // Output immediate value
+    .opcode(opcode),            // Output opcode
+    .funct3(funct3),            // Output funct3
+    .funct7(funct7)             // Output funct7
+  );
 
   endmodule
