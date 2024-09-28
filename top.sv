@@ -1,5 +1,9 @@
 `include "Sysbus.defs"
 `include "decoder.sv"
+`include "regfile.sv"
+`include "alu.sv"
+
+
 module top
 #(
   ID_WIDTH = 13,
@@ -62,13 +66,16 @@ module top
   // INSTRUCTION FETCH START 
 
   // Define the states of the FSM
-  typedef enum logic [2:0] {
-    IDLE        = 3'b000,
-    FETCH       = 3'b001,
-    DECODE      = 3'b010,
-    DONE        = 3'b011,
-    EXECUTE     = 3'b100
+  typedef enum logic [3:0] {
+      IDLE        = 4'b0000,
+      FETCH       = 4'b0001,
+      DECODE      = 4'b0010,
+      REG_READ    = 4'b0011,
+      EXECUTE     = 4'b0100,
+      REG_WRITE   = 4'b0101,
+      DONE        = 4'b0110
   } IF_state_t;
+
 
   IF_state_t current_state, next_state;
 
@@ -78,9 +85,44 @@ module top
   // Each beat of data contains two 32-bit instructions
   logic [31:0] cir_1, cir_2, cir;
    logic flag;
-  // FSM State Transition Logic (sequential, update pc here)
-  string decoded_instr;
 
+  decoded_inst_t decoded_instr;
+  string decoded_str;
+
+  Decode u_decode (
+      .addr(pc),
+      .instr(cir),                // Choose instruction to decode
+      .out_instr(decoded_instr),  // Decoded instruction string
+      .out_str(decoded_str)  // Decoded instruction string
+    );
+
+  // New wp2 signals
+  logic [63:0] rs1_data, rs2_data, alu_result;
+  logic [3:0] alu_op;
+  logic alu_zero;
+  logic reg_write;
+
+  // Instantiate RegisterFile
+  RegisterFile u_regfile (
+      .clk(clk),
+      .rst(reset),
+      .rs1_addr(decoded_instr.rs1),
+      .rs2_addr(decoded_instr.rs2),
+      .rd_addr(decoded_instr.rd),
+      .rd_data(alu_result),
+      .rd_write(reg_write),
+      .rs1_data(rs1_data),
+      .rs2_data(rs2_data)
+  );
+
+  // Instantiate ALU
+  ALU u_alu (
+      .a(rs1_data),
+      .b(rs2_data),
+      .instr(decoded_instr),
+      .result(alu_result),
+      .zero(alu_zero)
+  );
 
   always_ff @(posedge clk) begin
     if (reset) begin
@@ -92,7 +134,7 @@ module top
       pc <= pc_next;
       
       if (current_state == DECODE && m_axi_rvalid) begin
-          $display("   %h:\t   %h\t%s", pc, cir, decoded_instr); 
+          $display("   %h:\t   %h\t%s", pc, cir, decoded_str); 
           flag <= ~flag;
       end
     end
@@ -133,11 +175,10 @@ module top
       DECODE: begin
 
         m_axi_arvalid = 1'b0; // Deassert arvalid after handshake
-          
+        reg_write = 1'b0;
         if (m_axi_rvalid) begin
 
           if(!flag) begin
-            //$display("aka 1");
             cir = m_axi_rdata[31:0];
             m_axi_rready = 1'b0;
           end
@@ -151,29 +192,41 @@ module top
 
           // Terminate the simulation when an all-zero (64'b0) response is received from memory
           if (m_axi_rdata == 64'b0) begin
+            u_regfile.get_reg_values();
             $finish;
           end
 
           m_axi_rready = 1'b0;
+          next_state = REG_READ;
+        end
+      end
+
+      REG_READ: begin
+          // Read from register file
           next_state = EXECUTE;
-        end
       end
-
       EXECUTE: begin
+          // Set ALU operation based on instruction
 
-        if(!flag) begin
-          m_axi_rready = 1'b1;
-        end 
-        if (m_axi_rlast && !flag) begin
-          next_state = DONE;
-        end
-        else begin
-          next_state = DECODE;
-        end
+          next_state = REG_WRITE;
       end
+      REG_WRITE: begin
+          reg_write = 1'b1;
+          if(!flag) begin
+            m_axi_rready = 1'b1;
+          end 
+          if (m_axi_rlast && !flag) begin
+            next_state = DONE;
+          end
+          else begin
+            next_state = DECODE;
+          end
+      end
+
       DONE: begin
         // Initiate new 64-byte read request
         m_axi_rready = 1'b0;
+        reg_write = 1'b0;
         next_state = IDLE;
       end
 
@@ -183,27 +236,10 @@ module top
     endcase
   end
 
-    // Registers and intermediate logic
-  logic [4:0]  rd, rs1, rs2;       // Destination and source registers
-  logic [31:0] imm;                // Immediate value
-  logic [6:0]  opcode;             // Opcode
-  logic [2:0]  funct3;             // Funct3
-  logic [6:0]  funct7;             // Funct7
 
 
 
 
-Decode u_decode (
-    .addr(pc),
-    .instr(cir),                // Choose instruction to decode
-    .decoded_instr(decoded_instr),  // Decoded instruction string
-    .rd(rd),                    // Output destination register
-    .rs1(rs1),                  // Output source register 1
-    .rs2(rs2),                  // Output source register 2
-    .imm(imm),                  // Output immediate value
-    .opcode(opcode),            // Output opcode
-    .funct3(funct3),            // Output funct3
-    .funct7(funct7)             // Output funct7
-  );
+
 
   endmodule
