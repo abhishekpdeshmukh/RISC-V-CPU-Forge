@@ -29,10 +29,10 @@ module RegisterFile
 
 
     task get_reg_values;
-        $display("\n\nPrinting register file: ");
-        for (int i = 0; i < 32; i++) begin
-            $display("x%0d : \t0x%0x", i, $signed(registers[i]));
-        end
+    $display("\n\nPrinting register file: ");
+    for (int i = 0; i < 32; i++) begin
+        $display("x%0d : \t0x%0x", i, $signed(registers[i]));
+    end
     endtask
 
 endmodule
