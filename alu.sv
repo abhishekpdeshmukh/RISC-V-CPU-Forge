@@ -156,7 +156,7 @@ always_comb begin
                 3'b111: intermediate_result = a & sign_extended_imm; // ANDI
             endcase
         end
-        // ... (rest of the cases remain the same)
+        // rest of the cases - loads jumps etc will be taken care post wp2
     endcase
 
     result = intermediate_result;

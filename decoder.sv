@@ -5,7 +5,7 @@ typedef struct packed {
     logic [4:0] rs1;
     logic [4:0] rs2;
     logic [31:0] imm;
-    logic [1:0] width_32;     //  32bit op (ADDW, MULW, etc)
+    logic [1:0] width_32;     //  32-bit op 
     logic [2:0] funct3; 
     logic [6:0] funct7;
 } decoded_inst_t;
