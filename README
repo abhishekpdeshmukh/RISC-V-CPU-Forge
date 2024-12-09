@@ -1,34 +1,11 @@
-1. Building/Running your simulator code
+CSE 502 Course Project Submission
+12/09/2024
 
-   Following are the commands to build and run the code:
+Group members:
+1. Akash Mani - 116394110 - akash.mani@stonybrook.edu
+2. Abhishek Deshmukh - 115613009 - Abhishek.P.Deshmukh@stonybrook.edu
 
-   > make       // build code
-   > make run   // run code
-
-   The result of running the code will be a 'trace.vcd' waveform
-   file. You can view it using 'gtkwave' or 'dinotrace' by tunneling
-   X11 through ssh, or you can download the file to your local machine
-   and view it there.
-
-   To change the program binary which you are decoding, edit the
-   following line in Makefile:
-   
-   RUNELF=...
-
-
-2. Viewing the trace.vcd waveform
-
-   If you have logged in to the server using the -Y or -X option, you
-   can view waveforms using the following command:
-
-   > gtkwave trace.vcd
-
-   (you can also use dinotrace, or download the .vcd to view it)
-
-
-3. Submitting your code
-   
-   Type the following command in your project directory. It will sign
-   and submit your code to us:
-
-  > make submit
+Project details - 
+5+ stage, Set-Associative Caches - 60 points
+Any of the above + Branch predictor - 10 points (Predict branch not taken with pipeline flush if branch taken)
+Total: 70 points

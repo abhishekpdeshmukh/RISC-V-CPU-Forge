@@ -1,9 +1,9 @@
 .PHONY: all run clean submit
 
-PROG=/shared/cse502/tests/wp1/prog3.o
+PROG=/shared/cse502/tests/project/prog5
 #PROG=/shared/cse502/tests/bbl.bin
 
-TRACE?=--trace
+# TRACE?=--trace
 HAVETLB=n
 FULLSYSTEM=n
 
@@ -29,8 +29,8 @@ clean:
 	rm -rf obj_dir/ dramsim2/results trace.vcd core 
 
 SUBMITTO=/submit
-SUBMIT_POINTS=-10
-SUBMIT_SUFFIX=-wp1$(SUBMIT_POINTS)
+SUBMIT_POINTS=-70
+SUBMIT_SUFFIX=-project$(SUBMIT_POINTS)
 submit: clean
 	rm -f $(USER).tgz
 	tar -czvf $(USER).tgz --exclude=.*.sw? --exclude=$(USER).tgz* --exclude=*~ --exclude=.git *

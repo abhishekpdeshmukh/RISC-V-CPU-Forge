@@ -9,7 +9,7 @@ using namespace std;
 
 extern "C" {
 
-#define MAX_PENDING_WRITES 1000000
+#define MAX_PENDING_WRITES 1000
 #define DEBUG_WRITES 0
 
     map<long long, char> pending_writes;

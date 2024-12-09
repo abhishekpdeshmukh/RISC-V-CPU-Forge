@@ -1,0 +1,270 @@
+akmani@akmani:~/CSE502/project_final/final$ make run
+verilator -Wall -Wno-LITENDIAN -Wno-lint -O3 --trace --no-skip-identical --cc top.sv \
+--exe hardware.cpp main.cpp fake-os.cpp system.cpp /shared/cse502/DRAMSim2/libdramsim.so \
+-CFLAGS -I/shared/cse502 -CFLAGS -std=c++11 -CFLAGS -g3 \
+-LDFLAGS -Wl,-rpath=/shared/cse502/DRAMSim2 \
+-LDFLAGS -lncurses -LDFLAGS -lelf -LDFLAGS -lrt
+make -j5 -C obj_dir/ -f Vtop.mk CXX="ccache g++"
+make[1]: Entering directory '/home/akmani/CSE502/project_final/final/obj_dir'
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o fake-os.o ../fake-os.cpp
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o hardware.o ../hardware.cpp
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o main.o ../main.cpp
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o system.o ../system.cpp
+/usr/bin/perl /shared/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include Vtop.cpp Vtop___024unit.cpp > Vtop__ALLcls.cpp
+/usr/bin/perl /shared/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include Vtop__Dpi.cpp Vtop__Trace.cpp Vtop__Syms.cpp Vtop__Trace__Slow.cpp > Vtop__ALLsup.cpp
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o Vtop__ALLcls.o Vtop__ALLcls.cpp
+ccache g++  -I.  -MMD -I/shared/share/verilator/include -I/shared/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -Wno-char-subscripts -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable     -I/shared/cse502 -g3 -std=c++11   -c -o Vtop__ALLsup.o Vtop__ALLsup.cpp
+      Archiving Vtop__ALL.a ...
+ar r Vtop__ALL.a Vtop__ALLcls.o Vtop__ALLsup.o
+ranlib Vtop__ALL.a
+g++    fake-os.o hardware.o main.o system.o verilated.o verilated_dpi.o verilated_vcd_c.o Vtop__ALL.a   -Wl,-rpath=/shared/cse502/DRAMSim2 -lelf -lncurses -lrt /shared/cse502/DRAMSim2/libdramsim.so  -o Vtop -lm -lstdc++  2>&1 | c++filt
+make[1]: Leaving directory '/home/akmani/CSE502/project_final/final/obj_dir'
+cd obj_dir/ && env HAVETLB=n FULLSYSTEM=n ./Vtop /shared/cse502/tests/project/prog1
+Loading ELF header #0. offset: 0 filesize: 534803 memsize: 534803 vaddr: 10000 paddr: 10000 align: 4096
+Read 534803 bytes at 10000
+Loading ELF header #1. offset: 82f50 filesize: 1c00 memsize: 3320 vaddr: 93f50 paddr: 93f50 align: 4096
+Read 7168 bytes at 93f50
+Setting errno_addr to 93f70 (TLS at 93f50+0x20)
+== Loading device model file '../dramsim2/DDR2_micron_16M_8b_x8_sg3E.ini' == 
+== Loading system model file '../dramsim2/system.ini' == 
+===== MemorySystem 0 =====
+CH. 0 TOTAL_STORAGE : 1024MB | 1 Ranks | 8 Devices per rank
+===== Printing arguments of the program...
+== argc: 1
+== argv[0]: /shared/cse502/tests/project/prog1
+==========================================
+Enabling waves...
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+Hello world!
+Brought to you by /shared/cse502/tests/project/prog1, with 1 argument.
+akmani@akmani:~/CSE502/project_final/final$ make run
+cd obj_dir/ && env HAVETLB=n FULLSYSTEM=n ./Vtop /shared/cse502/tests/project/prog2
+Loading ELF header #0. offset: 0 filesize: 535203 memsize: 535203 vaddr: 10000 paddr: 10000 align: 4096
+Read 535203 bytes at 10000
+Loading ELF header #1. offset: 82f50 filesize: 1c00 memsize: 3320 vaddr: 93f50 paddr: 93f50 align: 4096
+Read 7168 bytes at 93f50
+Setting errno_addr to 93f70 (TLS at 93f50+0x20)
+== Loading device model file '../dramsim2/DDR2_micron_16M_8b_x8_sg3E.ini' == 
+== Loading system model file '../dramsim2/system.ini' == 
+===== MemorySystem 0 =====
+CH. 0 TOTAL_STORAGE : 1024MB | 1 Ranks | 8 Devices per rank
+===== Printing arguments of the program...
+== argc: 1
+== argv[0]: /shared/cse502/tests/project/prog2
+==========================================
+Enabling waves...
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+Must provide an integer number of digits as argument!
+akmani@akmani:~/CSE502/project_final/final$ make run
+cd obj_dir/ && env HAVETLB=n FULLSYSTEM=n ./Vtop /shared/cse502/tests/project/prog2 1000
+Loading ELF header #0. offset: 0 filesize: 535203 memsize: 535203 vaddr: 10000 paddr: 10000 align: 4096
+Read 535203 bytes at 10000
+Loading ELF header #1. offset: 82f50 filesize: 1c00 memsize: 3320 vaddr: 93f50 paddr: 93f50 align: 4096
+Read 7168 bytes at 93f50
+Setting errno_addr to 93f70 (TLS at 93f50+0x20)
+== Loading device model file '../dramsim2/DDR2_micron_16M_8b_x8_sg3E.ini' == 
+== Loading system model file '../dramsim2/system.ini' == 
+===== MemorySystem 0 =====
+CH. 0 TOTAL_STORAGE : 1024MB | 1 Ranks | 8 Devices per rank
+===== Printing arguments of the program...
+== argc: 2
+== argv[0]: /shared/cse502/tests/project/prog2
+== argv[1]: 1000
+==========================================
+Enabling waves...
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+314159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360
+
+akmani@akmani:~/CSE502/project_final/final$ make run
+cd obj_dir/ && env HAVETLB=n FULLSYSTEM=n ./Vtop /shared/cse502/tests/project/prog3
+Loading ELF header #0. offset: 0 filesize: 535403 memsize: 535403 vaddr: 10000 paddr: 10000 align: 4096
+Read 535403 bytes at 10000
+Loading ELF header #1. offset: 82f50 filesize: 1c00 memsize: 3320 vaddr: 93f50 paddr: 93f50 align: 4096
+Read 7168 bytes at 93f50
+Setting errno_addr to 93f70 (TLS at 93f50+0x20)
+== Loading device model file '../dramsim2/DDR2_micron_16M_8b_x8_sg3E.ini' == 
+== Loading system model file '../dramsim2/system.ini' == 
+===== MemorySystem 0 =====
+CH. 0 TOTAL_STORAGE : 1024MB | 1 Ranks | 8 Devices per rank
+===== Printing arguments of the program...
+== argc: 1
+== argv[0]: /shared/cse502/tests/project/prog3
+==========================================
+Enabling waves...
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+
+On the first day of Christmas my true love gave to me
+a partridge in a pear tree.
+
+On the second day of Christmas my true love gave to me
+two turtle doves
+and a partridge in a pear tree.
+
+On the third day of Christmas my true love gave to me
+three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the fourth day of Christmas my true love gave to me
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the fifth day of Christmas my true love gave to me
+five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the sixth day of Christmas my true love gave to me
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the seventh day of Christmas my true love gave to me
+seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the eigth day of Christmas my true love gave to me
+eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the ninth day of Christmas my true love gave to me
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the tenth day of Christmas my true love gave to me
+ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the eleventh day of Christmas my true love gave to me
+eleven pipers piping, ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+On the twelfth day of Christmas my true love gave to me
+twelve drummers drumming, eleven pipers piping, ten lords a-leaping,
+nine ladies dancing, eight maids a-milking, seven swans a-swimming,
+six geese a-laying, five gold rings;
+four calling birds, three french hens, two turtle doves
+and a partridge in a pear tree.
+
+akmani@akmani:~/CSE502/project_final/final$ 
+
+===== Printing arguments of the program...
+== argc: 1
+== argv[0]: /shared/cse502/tests/project/prog4
+==========================================
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+         !!!!!!!!"""""""""""""""""""""""""""##########$$$$%%&(.)(*2%$#######""""""""!!!!!!!!!!!!!!!!
+        !!!!!!!"""""""""""""""""""""""""""###########$$$$%%&'(*0+('&%$$#######""""""""!!!!!!!!!!!!!!
+       !!!!!!""""""""""""""""""""""""""############$$$$$%&(**-:::1('&%$$$#######""""""""!!!!!!!!!!!!
+      !!!!!""""""""""""""""""""""""""############$$$%%%&'(+:::::::02*&%$$$$$######""""""""!!!!!!!!!!
+      !!!"""""""""""""""""""""""""############$$%%%%%&&&'(4:::::::8:'&&%%%$$$$$####"""""""""!!!!!!!!
+     !!!""""""""""""""""""""""""##########$$$%&&'2''''(())+7::::::1*)(('&%%%%%'&$###"""""""""!!!!!!!
+    !!!"""""""""""""""""""""""#######$$$$$$%%&(-:0/+*,::2::::::::::::5:::('''(.+&%$##"""""""""!!!!!!
+   !!""""""""""""""""""""""#####$$$$$$$$$%%%&&(*3:::7:::::::::::::::::::::,::8:1)%$$##""""""""""!!!!
+   !""""""""""""""""""""####$$$$$$$$$$$%%%%&'()*.8::::::::::::::::::::::::::::56&%$$###""""""""""!!!
+  !!""""""""""""""""####$%%%$$$$$$$$%%%%%&'):8:5:::::::::::::::::::::::::::::0*(&%%$$##""""""""""!!!
+  !"""""""""""######$$%%(+'&&&&&&&&&&&&&&''),3:::::::::::::::::::::::::::::::::+(()%$###""""""""""!!
+ !"""""""#########$$$$%%)3*()(()4+(('''''(*9::::::::::::::::::::::::::::::::::::::*%$###"""""""""""!
+ !"""##########$$$$$$%%&'(*/:7.13::/:+*))*-:::::::::::::::::::::::::::::::::::::,(&%$####""""""""""!
+ ""##########$$$$$$$%&&&()+0:::::::::::2,,0:::::::::::::::::::::::::::::::::::::::&$$####"""""""""""
+ "#########$$$$$$$%(''((*0:::::::::::::::1::::::::::::::::::::::::::::::::::::::,'%$$#####""""""""""
+ ########$%%%%%%&&'(+.,..5::::::::::::::::::::::::::::::::::::::::::::::::::::::'%%$$#####""""""""""
+ $$$%%&&(&&'''''(,*+.:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*'&%$$$#####""""""""""
+ $$&%%'):)('))((),,,9::::::::::::::::::::::::::::::::::::::::::::::::::::::::,('&%$$$#####""""""""""
+ ##$$$##$%%%%%%&&&'(*8181::::::::::::::::::::::::::::::::::::::::::::::::::::::*&%$$$#####""""""""""
+ "#########$$$$%%%&(+(()*.:::::::::::::::4:::::::::::::::::::::::::::::::::::::::&%$$#####""""""""""
+ ""##########$$$$$$$%&&'+*-2::::::::::::..4::::::::::::::::::::::::::::::::::::::/&$$####"""""""""""
+ """"##########$$$$$$%&&'(*2::4::::::0.**+-:::::::::::::::::::::::::::::::::::::,(&%$####"""""""""""
+ !"""""##########$$$$%%&'-3.-*)*-:+)8(((()*.:::::::::::::::::::::::::::::::::::::,'%$####""""""""""!
+  !"""""""""#######$$$%%'4''&&&')('&&&&&''(+/::::::::::::::::::::::::::::::::::-5+-%$###""""""""""!!
+  !"""""""""""""""####$%&%%%%%%$$$%%%%%&&&')::::::::::::::::::::::::::::::::::.('&%$$###""""""""""!!
+   !"""""""""""""""""""###$$$$$$$$$$$$%%%%%&(-*-1:::::::::::::::::::::::::::::/(&%$$###""""""""""!!!
+   !!"""""""""""""""""""""#####$$$$$$$$$%%%%&'(+::::::::::::::::::::::::::0::::,7%$$##""""""""""!!!!
+    !!"""""""""""""""""""""""#######$$$$$$%%%&*:::4:+-::::::::::::::::::.)):7)+,(%$##""""""""""!!!!!
+    !!!""""""""""""""""""""""""##########$$$%&:)2/)(((+,*+,/::::::/,+))5(&&&&&'+%$##""""""""""!!!!!!
+     !!!!"""""""""""""""""""""""""###########$$%%%%%&&&''),::::::::8('&&%%%%$$$$###"""""""""!!!!!!!!
+      !!!!""""""""""""""""""""""""""############$$$%%%%&'(+::::::::-(&%%$$$$$#####"""""""""!!!!!!!!!
+       !!!!!""""""""""""""""""""""""""############$$$$$%%)+2,/:::,**'%$$$$#######""""""""!!!!!!!!!!!
+        !!!!!!"""""""""""""""""""""""""""###########$$$$$%&&'),:,)'&%$$$#######""""""""!!!!!!!!!!!!!
+         !!!!!!!!""""""""""""""""""""""""""###########$$$$%&'(.,,-*%%$#######"""""""!!!!!!!!!!!!!!!!
+akmani@akmani:~/CSE502/project_final/final$ make run
+cd obj_dir/ && env HAVETLB=n FULLSYSTEM=n ./Vtop /shared/cse502/tests/project/prog5
+Loading ELF header #0. offset: 0 filesize: 733425 memsize: 733425 vaddr: 10000 paddr: 10000 align: 4096
+Read 733425 bytes at 10000
+Loading ELF header #1. offset: b3f50 filesize: 2128 memsize: 278810 vaddr: c4f50 paddr: c4f50 align: 4096
+Read 8488 bytes at c4f50
+Setting errno_addr to c4f70 (TLS at c4f50+0x20)
+== Loading device model file '../dramsim2/DDR2_micron_16M_8b_x8_sg3E.ini' == 
+== Loading system model file '../dramsim2/system.ini' == 
+===== MemorySystem 0 =====
+CH. 0 TOTAL_STORAGE : 1024MB | 1 Ranks | 8 Devices per rank
+===== Printing arguments of the program...
+== argc: 1
+== argv[0]: /shared/cse502/tests/project/prog5
+==========================================
+writing vis file to ../dramsim2/results/dram_result/DDR2_micron_16M_8b_x8_sg3E/1GB.1Ch.1R.scheme2.open_page.32TQ.32CQ.RtB.pRank.vis
+DRAMSim2 Clock Frequency =333333333Hz, CPU Clock Frequency=2000000000Hz
+
+Sjeng version SPEC 1.0, Copyright (C) 2000-2005 Gian-Carlo Pascutto
+
+
+  +----+----+----+----+----+----+----+----+
+8 | *R | *N | *B | *Q | *K | *B | *N | *R |
+  +----+----+----+----+----+----+----+----+
+7 | *P | *P | *P | *P | *P | *P | *P | *P |
+  +----+----+----+----+----+----+----+----+
+6 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+5 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+4 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+3 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+2 |  P |  P |  P |  P |  P |  P |  P |  P |
+  +----+----+----+----+----+----+----+----+
+1 |  R |  N |  B |  Q |  K |  B |  N |  R |
+  +----+----+----+----+----+----+----+----+
+
+     a    b    c    d    e    f    g    h
+
+Sjeng: e2e4
+
+  +----+----+----+----+----+----+----+----+
+8 | *R | *N | *B | *Q | *K | *B | *N | *R |
+  +----+----+----+----+----+----+----+----+
+7 | *P | *P | *P | *P | *P | *P | *P | *P |
+  +----+----+----+----+----+----+----+----+
+6 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+5 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+4 |    |    |    |    |  P |    |    |    |
+  +----+----+----+----+----+----+----+----+
+3 |    |    |    |    |    |    |    |    |
+  +----+----+----+----+----+----+----+----+
+2 |  P |  P |  P |  P |    |  P |  P |  P |
+  +----+----+----+----+----+----+----+----+
+1 |  R |  N |  B |  Q |  K |  B |  N |  R |
+  +----+----+----+----+----+----+----+----+
+
+     a    b    c    d    e    f    g    h
+
+Opening phase.
+Time for move : 7400
